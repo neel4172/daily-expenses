@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="theme-color" content="#f6f5f2">
 <title>Daily Expenses</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Expenses">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -15,14 +15,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
 <style>
-  /* Premium theme: onyx black with champagne-gold accents */
+  /* Premium theme: platinum white with black accents */
   :root{
-    color-scheme: dark;
-    --bg:#0b0b0c; --card:#151517; --card2:#1c1c1f; --ink:#f4efe6; --muted:#9a9488; --line:#2a2826;
-    --accent:#d4b06a; --accent-2:#f1d9a4; --accent-soft:#2a2316; --on-accent:#17130b;
-    --warn:#f0857a; --warn-soft:#3a1d1a; --good:#e6c98c;
-    --gold-grad:linear-gradient(135deg,#f6e3b4 0%,#d4b06a 45%,#a8823f 100%);
-    --radius:20px; --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px rgba(0,0,0,.45);
+    color-scheme: light;
+    --bg:#f6f5f2; --card:#ffffff; --ink:#111111; --muted:#7a766e; --line:#e6e3dc;
+    --accent:#111111; --accent-2:#3a3a3a; --accent-soft:#efeee9; --on-accent:#ffffff;
+    --warn:#b4372a; --warn-soft:#f8e6e3; --good:#2f5d8a;
+    --gold-grad:#111111;
+    --radius:20px; --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif}
@@ -60,7 +60,7 @@
   .item .t span{font-size:12px;color:var(--muted)}
   .item .a{font-weight:800;font-variant-numeric:tabular-nums}
   .empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:14px}
-  .fab{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));width:62px;height:62px;border-radius:20px;border:0;background:var(--gold-grad);color:var(--on-accent);font-size:32px;font-weight:300;box-shadow:0 10px 28px rgba(212,176,106,.35);cursor:pointer}
+  .fab{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));width:62px;height:62px;border-radius:20px;border:0;background:var(--gold-grad);color:var(--on-accent);font-size:32px;font-weight:300;box-shadow:0 10px 26px rgba(0,0,0,.25);cursor:pointer}
   .notice{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:none}
   /* sheet */
   .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.2s;z-index:10}
@@ -119,7 +119,7 @@
   .lock{position:fixed;inset:0;z-index:50;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;
     padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));text-align:center}
   body.locked .lock{display:flex}
-  .lock .logo{width:64px;height:64px;border-radius:20px;background:var(--gold-grad);display:grid;place-items:center;font-size:30px;margin-bottom:14px;box-shadow:0 10px 30px rgba(212,176,106,.3)}
+  .lock .logo{width:64px;height:64px;border-radius:20px;background:var(--gold-grad);display:grid;place-items:center;font-size:30px;margin-bottom:14px;box-shadow:0 10px 26px rgba(0,0,0,.2)}
   .lock h3{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.02em}
   .lock p{margin:0 0 18px;color:var(--muted);font-size:14px;max-width:300px}
   .dots{display:flex;gap:14px;justify-content:center;margin:6px 0 10px;min-height:16px}
@@ -259,7 +259,9 @@
         <select class="in" id="fPay"></select></div>
     </div>
     <div id="toWrap" style="display:none"><label class="f">To account</label>
-      <select class="in" id="fTo"></select></div>
+      <select class="in" id="fTo"></select>
+      <div id="extWrap" style="display:none"><label class="f">Sent to (name)</label>
+        <input class="in" id="fExt" placeholder="e.g. Parth, Landlord, Amex card" maxlength="60"></div></div>
     <div class="small" id="bankHint" style="margin-top:6px"></div>
     <button class="btn" id="saveBtn" type="submit">Save expense</button>
     <button class="btn ghost" id="delBtn" type="button" style="display:none">Delete</button>
@@ -289,6 +291,34 @@
   <button class="btn ghost" id="nDel" type="button" style="display:none">Delete note</button>
 </div>
 
+<!-- Export sheet -->
+<div class="sheet" id="exportSheet" role="dialog" aria-label="Export">
+  <div class="sheethead"><b>⬇ Export transactions</b><button class="close" type="button" data-close aria-label="Close">✕</button></div>
+  <label class="f">Period</label>
+  <div class="chips" id="exRange">
+    <button type="button" class="chip on" data-r="month">Month</button>
+    <button type="button" class="chip" data-r="year">Year</button>
+    <button type="button" class="chip" data-r="custom">Custom dates</button>
+    <button type="button" class="chip" data-r="all">All time</button>
+  </div>
+  <div id="exMonthW"><label class="f">Month</label><input class="in" id="exMonth" type="month"></div>
+  <div id="exYearW" style="display:none"><label class="f">Year</label><select class="in" id="exYear"></select></div>
+  <div id="exCustomW" style="display:none" class="row2">
+    <div><label class="f">From</label><input class="in" id="exFrom" type="date"></div>
+    <div><label class="f">To</label><input class="in" id="exTo" type="date"></div>
+  </div>
+  <label class="f">Include</label>
+  <select class="in" id="exType">
+    <option value="all">Everything (expenses, income, transfers)</option>
+    <option value="expense">Expenses only</option>
+    <option value="income">Income only</option>
+    <option value="transfer">Transfers only</option>
+  </select>
+  <div class="card" id="exSummary" style="margin:14px 0 0;background:var(--bg);box-shadow:none"></div>
+  <button class="btn" id="exDownload" type="button">Download CSV (opens in Excel / Numbers)</button>
+  <button class="btn ghost" id="exCopy" type="button" style="color:var(--accent)">Copy to paste into a spreadsheet</button>
+</div>
+
 <!-- Settings sheet -->
 <div class="sheet" id="setSheet" role="dialog" aria-label="Settings">
   <div class="sheethead"><b>⚙️ Settings</b><button class="close" type="button" data-close aria-label="Close">✕</button></div>
@@ -311,9 +341,8 @@
   <label class="f" style="margin-top:18px">Account</label>
   <div class="small" id="acctEmail">—</div>
   <button class="btn ghost" id="signOut" type="button" style="margin-top:8px">Sign out</button>
-  <label class="f" style="margin-top:18px">Export this month</label>
-  <button class="btn ghost" id="copyCsv" type="button" style="color:var(--accent)">Copy as CSV (paste into Excel/Sheets)</button>
-  <button class="btn ghost" id="dlCsv" type="button" style="color:var(--accent)">Download CSV file</button>
+  <label class="f" style="margin-top:18px">Export</label>
+  <button class="btn ghost" id="exportBtn" type="button" style="color:var(--accent);margin-top:4px">⬇ Export transactions (month, year or dates)</button>
   <p class="small" style="margin-top:14px">Tip: on iPhone open this site in Safari → Share → “Add to Home Screen” so it opens like an app. Your entries are private to your account and sync on every device.</p>
 </div>
 
@@ -332,7 +361,9 @@
   const isInc = x => x.type==="income";
   const isXfer = x => x.type==="transfer";
   /** True for real spending (not income, not a transfer between own accounts). */
-  const isExp = x => !isInc(x) && !isXfer(x);
+  /** Money sent to someone else / an outside account (counts as spending). */
+  const isOut = x => isXfer(x) && !!x.toExternal;
+  const isExp = x => (!isInc(x) && !isXfer(x)) || isOut(x);
 
   /** App state */
   const S = {
@@ -346,7 +377,8 @@
   const pad = n => String(n).padStart(2,"0");
   const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
   const ym = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-  const money = v => S.settings.currency + (Math.round(v*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  /** Format an amount with the user's currency symbol, e.g. $1,234.50 or -$20.00. */
+  const money = v => (v<0?"-":"") + S.settings.currency + Math.abs(Math.round(v*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const catOf = n => S.settings.cats.find(c=>c.n===n) || INCOME_CATS.find(c=>c.n===n) || {e:"📦",n:n||"Other"};
   const r2 = v => Math.round(v*100)/100;
   const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -416,8 +448,8 @@
       return `<div class="day"><div class="dayhead"><span>${lbl}</span><span>${money(arr.filter(isExp).reduce((a,x)=>a+x.amount,0))} spent</span></div>
         ${arr.map(x=>{const c=isXfer(x)?{e:"⇄"}:catOf(x.cat);return `<div class="item" data-id="${esc(x.id)}">
           <div class="ic">${esc(c.e)}</div>
-          <div class="t"><b>${esc(x.note||x.cat)}</b><span>${isXfer(x)?`${esc(bankName(x))} → ${esc(toName(x))}`:`${esc(x.cat)} · ${esc(bankName(x))}`}</span></div>
-          <div class="a ${isInc(x)?"inc":isXfer(x)?"xfer":""}">${isInc(x)?"+":isXfer(x)?"":"−"}${money(x.amount)}</div></div>`}).join("")}</div>`;
+          <div class="t"><b>${esc(x.note||x.cat)}</b><span>${isXfer(x)?`${isOut(x)?"Sent · ":"Transfer · "}${esc(bankName(x))} → ${esc(toName(x))}`:`${esc(x.cat)} · ${esc(bankName(x))}`}</span></div>
+          <div class="a ${isInc(x)?"inc":(isXfer(x)&&!isOut(x))?"xfer":""}">${isInc(x)?"+":(isXfer(x)&&!isOut(x))?"":"−"}${money(x.amount)}</div></div>`}).join("")}</div>`;
     }).join("");
   }
 
@@ -426,7 +458,7 @@
   function openSheet(el){ closeSheets(); $("scrim").classList.add("on"); el.classList.add("on"); el.scrollTop=0; document.body.classList.add("sheet-open"); }
   /** Close every sheet. */
   function closeSheets(){
-    $("scrim").classList.remove("on"); ["sheet","setSheet","bankSheet","noteSheet"].forEach(id=>$(id).classList.remove("on"));
+    $("scrim").classList.remove("on"); ["sheet","setSheet","bankSheet","noteSheet","exportSheet"].forEach(id=>$(id).classList.remove("on"));
     document.body.classList.remove("sheet-open");
     if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   }
@@ -456,6 +488,7 @@
     if([...$("fPay").options].some(o=>o.value===cur)) $("fPay").value = cur;
     const curTo = $("fTo").value;
     $("fTo").innerHTML = S.banks.map(b=>`<option value="${esc(b.id)}">${esc(bankLabel(b))}</option>`).join("")
+      + `<option value="__ext">Another person / outside account (counts as spending)</option>`
       + `<option value="">Cash (withdrawal)</option>`;
     if([...$("fTo").options].some(o=>o.value===curTo)) $("fTo").value = curTo;
     bankHint();
@@ -465,7 +498,7 @@
   function bankName(x){const b=S.banks.find(b=>b.id===x.bankId);return b?bankLabel(b):(x.pay||"Cash");}
 
   /** Display name of the destination account of a transfer. */
-  function toName(x){const b=S.banks.find(b=>b.id===x.toBankId);return b?bankLabel(b):(x.toPay||"Cash");}
+  function toName(x){ if(x.toExternal) return x.toPay||"Other account"; const b=S.banks.find(b=>b.id===x.toBankId);return b?bankLabel(b):(x.toPay||"Cash");}
 
   /** Signed effect of an entry on its (from) bank balance (0 if not linked). */
   const effect = x => (!x||!x.bankId) ? 0 : (isInc(x)?1:-1)*(Number(x.amount)||0);
@@ -491,13 +524,14 @@
       const from=$("fPay").value, to=$("fTo").value;
       if(from && from===to){ h.textContent="Pick two different accounts."; return; }
       const old = S.editing?effects(S.editing):{};
-      const now = effects({type:"transfer",amount:amt,bankId:from,toBankId:to});
+      const now = effects({type:"transfer",amount:amt,bankId:from,toBankId:to==="__ext"?"":to});
       const parts=[from,to].filter(Boolean).map(id=>{
         const b=S.banks.find(b=>b.id===id); if(!b) return "";
         const before=r2((Number(b.balance)||0)-(old[id]||0));
         return `${esc(bankLabel(b))}: ${money(before)} → <b>${money(r2(before+(now[id]||0)))}</b>`;
       }).filter(Boolean);
-      h.innerHTML = parts.length ? parts.join("<br>") : "Add your banks in “My banks” to track transfers.";
+      h.innerHTML = (parts.length ? parts.join("<br>") : "Add your banks in “My banks” to track transfers.")
+        + (to==="__ext" ? "<br>Counts as spending this month." : (from||to ? "<br>Moving your own money – not counted as spending." : ""));
       return;
     }
     const id=$("fPay").value, b=S.banks.find(b=>b.id===id);
@@ -560,6 +594,7 @@
     [...$("fType").children].forEach(b=>b.classList.toggle("on",b.dataset.t===t));
     const xfer=t==="transfer";
     $("toWrap").style.display = xfer?"block":"none";
+    if(!xfer) $("extWrap").style.display="none";
     $("catWrap").style.display = xfer?"none":"block";
     if(xfer){
       $("lblItem").textContent="What for (optional)";
@@ -569,7 +604,7 @@
       if(!$("fTo").value || $("fTo").value===$("fPay").value){
         const other=S.banks.find(b=>b.id!==$("fPay").value); if(other) $("fTo").value=other.id;
       }
-      bankHint();
+      extUi(); bankHint();
       $("saveBtn").textContent = S.editing?"Update transfer":"Save transfer";
       return;
     }
@@ -585,7 +620,9 @@
   }
   $("fType").onclick = e=>{const b=e.target.closest("button");if(b)setType(b.dataset.t);};
   $("fPay").onchange = bankHint;
-  $("fTo").onchange = bankHint;
+  /** Show the "Sent to" name box only for outside transfers. */
+  function extUi(){ $("extWrap").style.display = $("fTo").value==="__ext" ? "block" : "none"; }
+  $("fTo").onchange = ()=>{ extUi(); bankHint(); };
   $("fAmt").addEventListener("input",bankHint);
 
   function renderCatChips(){
@@ -606,7 +643,8 @@
     let bid = item ? (item.bankId || (S.banks.find(b=>bankLabel(b)===item.pay)?.id) || "") : (S.lastBank ?? S.banks[0]?.id ?? "");
     if(![...$("fPay").options].some(o=>o.value===bid)) bid="";
     $("fPay").value = bid;
-    if(item && isXfer(item)) $("fTo").value = item.toBankId||"";
+    $("fExt").value = item&&item.toExternal ? (item.toPay||"") : "";
+    if(item && isXfer(item)) $("fTo").value = item.toExternal ? "__ext" : (item.toBankId||"");
     $("delBtn").style.display = item?"block":"none";
     setType(item ? (item.type||"expense") : "expense");
     openSheet($("sheet"));
@@ -621,20 +659,21 @@
     const inc = S.fType==="income", xfer = S.fType==="transfer";
     if(xfer){
       if(!(amount>0)){toast("Enter the amount to transfer");$("fAmt").focus();return;}
-      const from=$("fPay").value, to=$("fTo").value;
-      if(!from && !to){toast("Pick the accounts");return;}
-      if(from===to){toast("Pick two different accounts");return;}
+      const from=$("fPay").value, toSel=$("fTo").value, ext=toSel==="__ext", to=ext?"":toSel;
+      if(!from && !to && !ext){toast("Pick the accounts");return;}
+      if(!ext && from===to){toast("Pick two different accounts");return;}
       const fb=S.banks.find(b=>b.id===from), tb=S.banks.find(b=>b.id===to);
-      const body={type:"transfer", amount:r2(amount), cat:"Transfer", note:$("fNote").value.trim()||"Transfer",
-        date:$("fDate").value||ymd(new Date()), bankId:from, pay:fb?bankLabel(fb):"Cash", toBankId:to, toPay:tb?bankLabel(tb):"Cash",
-        ts:S.editing?.ts||Date.now()};
+      const extName=$("fExt").value.trim();
+      const body={type:"transfer", amount:r2(amount), cat:ext?"Sent":"Transfer", note:$("fNote").value.trim()||(ext?`Sent to ${extName||"other account"}`:"Transfer"),
+        date:$("fDate").value||ymd(new Date()), bankId:from, pay:fb?bankLabel(fb):"Cash", toBankId:to,
+        toPay: ext ? (extName||"Other account") : (tb?bankLabel(tb):"Cash"), toExternal:ext, ts:S.editing?.ts||Date.now()};
       const changes = addFx(addFx({}, S.editing?effects(S.editing):{}, -1), effects(body));
       $("saveBtn").disabled=true;
       try{
         await (S.editing ? S.ledger.doc(S.editing.id) : S.ledger.doc()).set(body);
         await adjustBanks(changes);
         closeSheets();
-        toast(`Transfer saved ✓ ${fb?fb.name:"Cash"} → ${tb?tb.name:"Cash"}`);
+        toast(`${ext?"Sent":"Transfer saved"} ✓ ${fb?fb.name:"Cash"} → ${ext?(extName||"other account"):(tb?tb.name:"Cash")}`);
       }catch(err){ handleWriteErr(err); }
       finally{$("saveBtn").disabled=false;}
       return;
@@ -702,33 +741,88 @@
     if(!S.canWrite){toast("Sign in to save settings");return;}
     try{await S.settingsRef.set(next);S.settings=next;render();renderBanks();closeSheets();toast("Settings saved");}catch(err){handleWriteErr(err);}
   };
-  $("copyCsv").onclick = async ()=>{
-    const key=ym(S.view);
-    const rows=S.items.filter(x=>x.date.startsWith(key)).sort((a,b)=>a.date<b.date?-1:1);
-    const q=s=>`"${String(s??"").replace(/"/g,'""')}"`;
-    const csv=["Date,Type,Category,Item,Bank,Money",...rows.map(x=>[x.date,isInc(x)?"Income":isXfer(x)?"Transfer":"Expense",q(x.cat),q(x.note),q(isXfer(x)?bankName(x)+" → "+toName(x):bankName(x)),(isExp(x)?"-":"")+x.amount].join(","))].join("\n");
-    try{await navigator.clipboard.writeText(csv);toast(`Copied ${rows.length} rows`);}catch{toast("Copy not allowed here");}
-  };
 
   // ---------- month nav / search ----------
-  /** Build this month's CSV text. @return {{csv:string,n:number,key:string}} */
-  function monthCsv(){
-    const key=ym(S.view);
-    const rows=S.items.filter(x=>x.date.startsWith(key)).sort((a,b)=>a.date<b.date?-1:1);
-    const q=s=>`"${String(s??"").replace(/"/g,'""')}"`;
-    const csv=["Date,Type,Category,Item,Bank,Money",...rows.map(x=>[x.date,isInc(x)?"Income":isXfer(x)?"Transfer":"Expense",q(x.cat),q(x.note),q(isXfer(x)?bankName(x)+" → "+toName(x):bankName(x)),(isExp(x)?"-":"")+x.amount].join(","))].join("\n");
-    return {csv,n:rows.length,key};
-  }
-  $("dlCsv").onclick = ()=>{
-    const {csv,key}=monthCsv();
-    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download=`expenses-${key}.csv`; a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
-  };
   $("prevM").onclick=()=>{S.view.setMonth(S.view.getMonth()-1);render();};
   $("nextM").onclick=()=>{S.view.setMonth(S.view.getMonth()+1);render();};
   $("q").oninput=render;
 
 
+
+
+  // ---------- export ----------
+  /** Export transactions for a month, a year, custom dates or all time, as CSV. */
+  let exRange = "month";
+
+  /** Entries matching the export choices, oldest first. */
+  function exRows(){
+    let from="0000-00-00", to="9999-99-99";
+    if(exRange==="month" && $("exMonth").value){ from=$("exMonth").value+"-01"; to=$("exMonth").value+"-31"; }
+    if(exRange==="year" && $("exYear").value){ from=$("exYear").value+"-01-01"; to=$("exYear").value+"-12-31"; }
+    if(exRange==="custom"){ from=$("exFrom").value||from; to=$("exTo").value||to; }
+    const t=$("exType").value;
+    return S.items.filter(x=>x.date>=from && x.date<=to)
+      .filter(x=> t==="all" || (t==="expense"&&isExp(x)) || (t==="income"&&isInc(x)) || (t==="transfer"&&isXfer(x)))
+      .sort((a,b)=> a.date===b.date ? (a.ts||0)-(b.ts||0) : (a.date<b.date?-1:1));
+  }
+  /** Label for the chosen period, used in the file name and summary. */
+  function exLabel(){
+    if(exRange==="month" && $("exMonth").value) return new Date($("exMonth").value+"-15").toLocaleDateString(undefined,{month:"long",year:"numeric"});
+    if(exRange==="year") return $("exYear").value||"year";
+    if(exRange==="custom") return `${$("exFrom").value||"start"} to ${$("exTo").value||"today"}`;
+    return "All time";
+  }
+  /** Build the CSV text (with Month and Year columns and a totals block). */
+  function exCsv(rows){
+    const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+    const out=["Date,Month,Year,Type,Category,Item,Bank / Account,Money"];
+    rows.forEach(x=>{
+      const d=new Date(x.date+"T12:00:00");
+      out.push([x.date, q(d.toLocaleDateString(undefined,{month:"long"})), d.getFullYear(),
+        isInc(x)?"Income":isOut(x)?"Sent (expense)":isXfer(x)?"Transfer":"Expense", q(isXfer(x)?(isOut(x)?"Sent":"Transfer"):x.cat), q(x.note),
+        q(isXfer(x)?bankName(x)+" → "+toName(x):bankName(x)), (isExp(x)?"-":"")+Number(x.amount).toFixed(2)].join(","));
+    });
+    const sp=rows.filter(isExp).reduce((a,x)=>a+x.amount,0), inc=rows.filter(isInc).reduce((a,x)=>a+x.amount,0);
+    out.push("", `,,,,,"Total spent",,-${sp.toFixed(2)}`, `,,,,,"Total income",,${inc.toFixed(2)}`, `,,,,,"Net",,${(inc-sp).toFixed(2)}`);
+    return out.join("\n");
+  }
+  /** Refresh the period inputs and the preview totals. */
+  function exRender(){
+    [...$("exRange").children].forEach(b=>b.classList.toggle("on",b.dataset.r===exRange));
+    $("exMonthW").style.display = exRange==="month"?"block":"none";
+    $("exYearW").style.display = exRange==="year"?"block":"none";
+    $("exCustomW").style.display = exRange==="custom"?"grid":"none";
+    const rows=exRows();
+    const sp=rows.filter(isExp).reduce((a,x)=>a+x.amount,0), inc=rows.filter(isInc).reduce((a,x)=>a+x.amount,0);
+    $("exSummary").innerHTML = `<div class="small">${esc(exLabel())}</div>
+      <div style="font-weight:800;font-size:18px;margin:2px 0 6px">${rows.length} transaction${rows.length===1?"":"s"}</div>
+      <div class="small">Spent ${money(sp)} · Income ${money(inc)} · Net ${money(inc-sp)}</div>`;
+    $("exDownload").disabled = $("exCopy").disabled = !rows.length;
+  }
+  $("exportBtn").onclick = ()=>{
+    const years=[...new Set(S.items.map(x=>x.date.slice(0,4)))].sort().reverse();
+    const cy=String(new Date().getFullYear()); if(!years.includes(cy)) years.unshift(cy);
+    $("exYear").innerHTML = years.map(y=>`<option>${y}</option>`).join("");
+    $("exMonth").value = ym(S.view);
+    $("exTo").value = ymd(new Date());
+    if(!$("exFrom").value){ const d=new Date(); d.setDate(1); $("exFrom").value=ymd(d); }
+    exRender(); openSheet($("exportSheet"));
+  };
+  $("exRange").onclick = e=>{const b=e.target.closest(".chip"); if(!b) return; exRange=b.dataset.r; exRender();};
+  ["exMonth","exYear","exFrom","exTo","exType"].forEach(id=>$(id).addEventListener("change",exRender));
+  $("exDownload").onclick = ()=>{
+    const rows=exRows(); if(!rows.length) return;
+    const name=`expenses-${exLabel().replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase()}.csv`;
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob(["﻿"+exCsv(rows)],{type:"text/csv;charset=utf-8"}));
+    a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast(`Exported ${rows.length} transactions`);
+  };
+  $("exCopy").onclick = async ()=>{
+    const rows=exRows(); if(!rows.length) return;
+    try{ await navigator.clipboard.writeText(exCsv(rows)); toast(`Copied ${rows.length} rows`); }catch{ toast("Copy not allowed – use Download"); }
+  };
 
   // ---------- notes ----------
   /** Free-form notes, one Firestore document each, private to the user. */
