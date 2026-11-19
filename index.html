@@ -123,6 +123,9 @@
   .pad{display:grid;grid-template-columns:repeat(3,76px);gap:14px;justify-content:center}
   .pad button{height:76px;border-radius:50%;border:0;background:var(--card);color:var(--ink);font:600 28px Manrope,sans-serif;box-shadow:var(--shadow);cursor:pointer}
   .pad button:active{background:var(--accent-soft)}
+  .pad button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+  .dots.busy i.f{animation:pulse .6s ease-in-out infinite alternate}
+  @keyframes pulse{to{opacity:.35;transform:scale(.8)}}
   .pad button.fn{background:transparent;box-shadow:none;font-size:15px;color:var(--muted)}
   .pad button:disabled{opacity:.35}
   .lock .link{border:0;background:none;color:var(--accent);font:700 14px Manrope,sans-serif;margin-top:18px;cursor:pointer}
@@ -636,16 +639,34 @@
   }
 
   /** Derive a hash for a secret. @param {string} secret @param {string} salt @param {string} algo */
-  async function derive(secret, salt, algo){
+  /** PBKDF2 rounds for new PINs: fast on iPhone Safari (~0.1 s) while still salted and slowed. */
+  const PIN_ITER = 10000;
+  /** Rounds used by PINs saved before this update (they are upgraded on the next unlock). */
+  const OLD_ITER = 150000;
+
+  /**
+   * Derive a hash for a secret.
+   * @param {string} secret PIN or recovery word
+   * @param {string} salt   random hex salt
+   * @param {string} algo   "pbkdf2" or "sha256x"
+   * @param {number} [iter] PBKDF2 rounds (defaults to OLD_ITER for older records)
+   */
+  async function derive(secret, salt, algo, iter){
     if(algo==="pbkdf2"){
       const key=await crypto.subtle.importKey("raw",enc.encode(secret),"PBKDF2",false,["deriveBits"]);
-      return hex(await crypto.subtle.deriveBits({name:"PBKDF2",salt:enc.encode(salt),iterations:150000,hash:"SHA-256"},key,256));
+      return hex(await crypto.subtle.deriveBits({name:"PBKDF2",salt:enc.encode(salt),iterations:iter||OLD_ITER,hash:"SHA-256"},key,256));
     }
     let h=salt+secret; for(let i=0;i<3000;i++) h=sha256js(salt+h); return h;
   }
   const bestAlgo = () => (window.crypto && crypto.subtle) ? "pbkdf2" : "sha256x";
 
   function lockShow(title,msg){ $("lTitle").textContent=title; $("lMsg").textContent=msg; }
+  /** Show "Checking…" and block the keypad while a PIN is being verified. */
+  function checking(on){
+    L.busy=on; $("lDots").classList.toggle("busy",on);
+    $("lErr").style.color = on ? "var(--muted)" : "";
+    if(on) $("lErr").textContent="Checking…"; else if($("lErr").textContent==="Checking…") $("lErr").textContent="";
+  }
   function drawDots(){ $("lDots").innerHTML=Array.from({length:L.pinLen},(_,i)=>`<i class="${i<L.buf.length?"f":""}"></i>`).join(""); }
   function lerr(m){ $("lErr").textContent=m||""; if(m){$("lDots").classList.remove("shake");void $("lDots").offsetWidth;$("lDots").classList.add("shake");} }
   function showPin(){ $("lPinArea").style.display="block"; $("lRecForm").style.display="none"; $("lAuth").style.display="none"; }
@@ -674,8 +695,19 @@
     const pin=L.buf;
     if(L.mode==="enter"){
       if(Date.now()<L.until){ lerr(`Too many tries. Wait ${Math.ceil((L.until-Date.now())/1000)}s`); L.buf=""; drawDots(); return; }
-      const h=await derive(pin,L.sec.salt,L.sec.algo);
-      if(h===L.sec.pinHash){ unlock(); return; }
+      checking(true);
+      const h=await derive(pin,L.sec.salt,L.sec.algo,L.sec.iter);
+      checking(false);
+      if(h===L.sec.pinHash){
+        unlock();
+        // upgrade older, slow PIN hashes so the next unlock is instant
+        if(L.sec.algo==="pbkdf2" && (L.sec.iter||OLD_ITER)!==PIN_ITER){
+          const salt=randSalt(), pinHash=await derive(pin,salt,"pbkdf2",PIN_ITER);
+          const upd={salt,pinHash,iter:PIN_ITER};
+          L.ref.update(upd).then(()=>{L.sec={...L.sec,...upd};}).catch(()=>{});
+        }
+        return;
+      }
       L.fails++; L.buf=""; drawDots();
       if(L.fails>=5){ L.until=Date.now()+30000*Math.pow(2,L.fails-5); lerr(`Wrong PIN. Locked for ${Math.round((L.until-Date.now())/1000)}s`); }
       else lerr(`Wrong PIN · ${5-L.fails} tries left`);
@@ -697,10 +729,11 @@
   /** Save PIN (and optionally a new recovery word) to the private db doc. */
   async function savePin(pin, recWord){
     const algo=bestAlgo(), salt=randSalt();
-    const sec={algo, salt, pinHash:await derive(pin,salt,algo), pinLen:pin.length, lockMin:L.sec?.lockMin ?? 1, updated:Date.now()};
-    if(recWord){ sec.recSalt=randSalt(); sec.recHash=await derive(recWord.trim().toLowerCase(),sec.recSalt,algo); }
-    else { sec.recSalt=L.sec.recSalt; sec.recHash=L.sec.recHash; sec.recAlgo=L.sec.recAlgo||L.sec.algo; }
-    if(recWord) sec.recAlgo=algo;
+    checking(true);
+    const sec={algo, salt, iter:PIN_ITER, pinHash:await derive(pin,salt,algo,PIN_ITER), pinLen:pin.length, lockMin:L.sec?.lockMin ?? 1, updated:Date.now()};
+    if(recWord){ sec.recSalt=randSalt(); sec.recIter=PIN_ITER; sec.recHash=await derive(recWord.trim().toLowerCase(),sec.recSalt,algo,PIN_ITER); sec.recAlgo=algo; }
+    else { sec.recSalt=L.sec.recSalt; sec.recHash=L.sec.recHash; sec.recAlgo=L.sec.recAlgo||L.sec.algo; if(L.sec.recIter) sec.recIter=L.sec.recIter; }
+    checking(false);
     try{ await L.ref.set(sec); L.sec=sec; unlock(); toast("PIN saved 🔒"); }
     catch(err){
       if(err?.code==="invalid_argument"){ noWriteAccess(); return; }
@@ -709,13 +742,13 @@
   }
 
   $("lPad").onclick = e=>{
-    const b=e.target.closest("button"); if(!b) return; const k=b.dataset.k;
+    const b=e.target.closest("button"); if(!b || L.busy) return; const k=b.dataset.k;
     if(k==="del"){ L.buf=L.buf.slice(0,-1); drawDots(); return; }
     if(k==="ok"){ if(L.mode==="new") onPinComplete(); return; }
     if(L.buf.length>=L.pinLen) return;
     L.buf+=k; drawDots(); lerr("");
-    if(L.mode!=="new" && L.buf.length===L.pinLen) setTimeout(onPinComplete,80);
-    if(L.mode==="new" && L.buf.length===6) setTimeout(onPinComplete,80);
+    if(L.mode!=="new" && L.buf.length===L.pinLen) setTimeout(onPinComplete,20);
+    if(L.mode==="new" && L.buf.length===6) setTimeout(onPinComplete,20);
   };
   document.addEventListener("keydown",e=>{
     if(!document.body.classList.contains("locked") || $("lPinArea").style.display==="none") return;
@@ -740,7 +773,7 @@
     }
     if(L.mode==="recover"){
       if(Date.now()<L.until){ $("lRecErr").textContent=`Too many tries. Wait ${Math.ceil((L.until-Date.now())/1000)}s`; return; }
-      const h=await derive(w,L.sec.recSalt,L.sec.recAlgo||L.sec.algo);
+      const h=await derive(w,L.sec.recSalt,L.sec.recAlgo||L.sec.algo,L.sec.recIter);
       if(h===L.sec.recHash){ L.fails=0; startSetup(true); L.changing=true; $("lCancel").style.display="none"; return; }
       L.fails++; if(L.fails>=5) L.until=Date.now()+30000*Math.pow(2,L.fails-5);
       $("lRecErr").textContent="That recovery word doesn't match";
