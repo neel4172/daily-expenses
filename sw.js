@@ -3,7 +3,7 @@
  * @brief Offline shell for Daily Expenses: network first, cached copy when offline.
  * Your data itself is cached and synced by Firestore, not here.
  */
-const CACHE = "daily-expenses-v3";
+const CACHE = "daily-expenses-v4";
 const SHELL = ["./", "index.html", "app-auth.js", "firebase-config.js", "manifest.webmanifest",
   "apple-touch-icon.png", "icon-192.png", "icon-512.png"];
 
